@@ -36,6 +36,9 @@ def buyLotsOfFruit(orderList):
     """
     totalCost = 0.0
     "*** YOUR CODE HERE ***"
+    for item in orderList:
+        num = fruitPrices[item[0]] * item[1]
+        totalCost = totalCost + num
     return totalCost
 
 
