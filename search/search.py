@@ -102,8 +102,7 @@ def depthFirstSearch(problem: SearchProblem):
         for successor in problem.getSuccessors(node):
             if successor[0] not in visited:
                 frontier.push((successor[0], path + [successor[1]]))
-        
-    
+
     return []
 
 def breadthFirstSearch(problem: SearchProblem):
