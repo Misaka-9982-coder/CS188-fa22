@@ -93,14 +93,15 @@ def depthFirstSearch(problem: SearchProblem):
     visited = set()
 
     frontier.push((problem.getStartState(), []))
+
     while not frontier.isEmpty():
         node, path = frontier.pop()
-        visited.add(node)
         if problem.isGoalState(node):
             return path
 
-        for successor in problem.getSuccessors(node):
-            if successor[0] not in visited:
+        if node not in visited:
+            visited.add(node)
+            for successor in problem.getSuccessors(node):
                 frontier.push((successor[0], path + [successor[1]]))
 
     return []
@@ -114,17 +115,16 @@ def breadthFirstSearch(problem: SearchProblem):
     visited = set()
 
     frontier.push((problem.getStartState(), []))
-    visited.add(problem.getStartState()[0])
 
     while not frontier.isEmpty():
         node, path = frontier.pop()
         if problem.isGoalState(node):
             return path
 
-        for successor in problem.getSuccessors(node):
-            if successor[0] not in visited:
+        if node not in visited:
+            visited.add(node)
+            for successor in problem.getSuccessors(node):
                 frontier.push((successor[0], path + [successor[1]]))
-                visited.add(successor[0])
 
     return []
 
