@@ -108,7 +108,25 @@ def depthFirstSearch(problem: SearchProblem):
 def breadthFirstSearch(problem: SearchProblem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # util.raiseNotDefined()
+    from util import Queue
+    frontier = Queue()
+    visited = set()
+
+    frontier.push((problem.getStartState(), []))
+    visited.add(problem.getStartState()[0])
+
+    while not frontier.isEmpty():
+        node, path = frontier.pop()
+        if problem.isGoalState(node):
+            return path
+
+        for successor in problem.getSuccessors(node):
+            if successor[0] not in visited:
+                frontier.push((successor[0], path + [successor[1]]))
+                visited.add(successor[0])
+
+    return []
 
 def uniformCostSearch(problem: SearchProblem):
     """Search the node of least total cost first."""
