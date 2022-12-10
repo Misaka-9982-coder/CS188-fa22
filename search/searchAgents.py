@@ -481,22 +481,10 @@ def foodHeuristic(state: Tuple[Tuple, List[List]], problem: FoodSearchProblem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    class NewState:
-        def __init__(self, state, walls):
-            self.state = state
-            self.walls = walls
-        
-        def getWalls(self):
-            return self.walls
-        
-        def getPacmanPosition(self):
-            return self.state[0]
-
     value = 0
-    for row in range(foodGrid.height):
-        for col in range(foodGrid.width):
-            if foodGrid[col][row]:
-                value = max(value, mazeDistance((col, row), position, NewState(state, problem.walls)))
+    foods = foodGrid.asList()
+    for food in foods:
+        value = max(value, mazeDistance(food, position, problem.startingGameState))
     return value
 
 class ClosestDotSearchAgent(SearchAgent):
