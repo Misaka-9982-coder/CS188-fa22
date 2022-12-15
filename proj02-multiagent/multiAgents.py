@@ -80,9 +80,19 @@ class ReflexAgent(Agent):
 
         "*** YOUR CODE HERE ***"
         distToPacman = partial(manhattanDistance, newPos)
+        
+        def ghostF(ghost):
+            dist = distToPacman(ghost.getPosition())
+            if ghost.scaredTimer > dist:
+                return inf
+            if dist <= 1:
+                return -inf
+            return 0
+        ghostScore = min(map(ghostF, newGhostStates))
+        
         distToClosestFood = min(map(distToPacman, newFood.asList()), default=inf)
         closestFoodFeature = 1.0 / (1.0 + distToClosestFood)
-        return successorGameState.getScore() + closestFoodFeature
+        return successorGameState.getScore() + closestFoodFeature + ghostScore
 
 def scoreEvaluationFunction(currentGameState: GameState):
     """
