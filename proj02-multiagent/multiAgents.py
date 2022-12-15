@@ -19,6 +19,10 @@ import random, util
 from game import Agent
 from pacman import GameState
 
+from functools import partial
+from math import inf, log
+import numpy as np
+
 class ReflexAgent(Agent):
     """
     A reflex agent chooses an action at each choice point by examining
@@ -75,7 +79,10 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        distToPacman = partial(manhattanDistance, newPos)
+        distToClosestFood = min(map(distToPacman, newFood.asList()), default=inf)
+        closestFoodFeature = 1.0 / (1.0 + distToClosestFood)
+        return successorGameState.getScore() + closestFoodFeature
 
 def scoreEvaluationFunction(currentGameState: GameState):
     """
