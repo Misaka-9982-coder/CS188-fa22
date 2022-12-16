@@ -292,6 +292,7 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
+        self.startingGameState = startingGameState
 
     def getStartState(self):
         """
@@ -386,6 +387,7 @@ def cornersHeuristic(state: Any, problem: CornersProblem):
         index, minDist = None, 1e9
         for curIdx, curPoint in enumerate(points):
             curDist = util.manhattanDistance(pos, curPoint)
+            # curDist = mazeDistance(pos, curPoint, problem.startingGameState)
             if curDist < minDist:
                 index, minDist = curIdx, curDist
         return index, minDist
