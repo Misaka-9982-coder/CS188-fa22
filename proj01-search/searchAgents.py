@@ -382,11 +382,25 @@ def cornersHeuristic(state: Any, problem: CornersProblem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    value = 0
-    for idx in range(len(corners)):
-        if not state[idx + 1]:
-            value = max(value, util.manhattanDistance(state[0], corners[idx]))
-    return value # Default to trivial solution
+    def distanceArgmin(pos, points):
+        index, minDist = None, 1e9
+        for curIdx, curPoint in enumerate(points):
+            curDist = util.manhattanDistance(pos, curPoint)
+            if curDist < minDist:
+                index, minDist = curIdx, curDist
+        return index, minDist
+
+    def optimalPathWithoutWalls(fromPos, throughPoints):
+        points = list(throughPoints)
+        # print(points)
+        pos, pathLength = fromPos, 0
+        while points != []:
+            index, dist = distanceArgmin(pos, points)
+            pathLength += dist
+            pos = points[index]
+            points.pop(index)
+        return pathLength
+    return optimalPathWithoutWalls(*state)
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
