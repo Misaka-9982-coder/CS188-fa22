@@ -300,8 +300,7 @@ class CornersProblem(search.SearchProblem):
         """
         "*** YOUR CODE HERE ***"
         # util.raiseNotDefined()
-        res = (self.startingPosition, False, False, False, False)
-        return res
+        return (self.startingPosition, self.corners)
 
     def isGoalState(self, state: Any):
         """
@@ -309,11 +308,8 @@ class CornersProblem(search.SearchProblem):
         """
         "*** YOUR CODE HERE ***"
         # util.raiseNotDefined()
-        for item in state[1:]:
-            if not item:
-                return False
-
-        return True
+        pacmanPos, unvisitedCorners = state
+        return unvisitedCorners == (pacmanPos,)
 
     def getSuccessors(self, state: Any):
         """
@@ -325,6 +321,7 @@ class CornersProblem(search.SearchProblem):
             state, 'action' is the action required to get there, and 'stepCost'
             is the incremental cost of expanding to that successor
         """
+        pacmanPos, unvisitedCorners = state
 
         successors = []
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
@@ -340,14 +337,16 @@ class CornersProblem(search.SearchProblem):
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
             hitsWall = self.walls[nextx][nexty]
-            if not hitsWall:
-                nextState = (nextx, nexty)
-                corners = state[1:]
-                if nextState in self.corners:
-                    corners = list(corners)
-                    corners[self.corners.index(nextState)] = True
-                    corners = tuple(corners)
-                successors.append(((nextState, *corners), action, 1))
+            
+            if hitsWall:
+                continue
+            
+            nextPacmanPos = (nextx, nexty)
+            nextUnvisitedCorners = tuple(
+                corner for corner in unvisitedCorners if corner != pacmanPos
+            )
+            nextState = (nextPacmanPos, nextUnvisitedCorners)
+            successors.append((nextState, action, 1))
 
         self._expanded += 1 # DO NOT CHANGE
         return successors
