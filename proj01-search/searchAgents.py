@@ -42,6 +42,11 @@ import util
 import time
 import search
 import pacman
+import numpy as np
+import networkx as nx
+
+from functools import partial, lru_cache
+from itertools import combinations
 
 class GoWestAgent(Agent):
     "An agent that goes West until it can't."
@@ -387,7 +392,7 @@ def cornersHeuristic(state: Any, problem: CornersProblem):
         index, minDist = None, 1e9
         for curIdx, curPoint in enumerate(points):
             curDist = util.manhattanDistance(pos, curPoint)
-            # curDist = mazeDistance(pos, curPoint, problem.startingGameState)
+            # curDist = mazeDistance(problem.startingGameState, pos, curPoint)
             if curDist < minDist:
                 index, minDist = curIdx, curDist
         return index, minDist
@@ -410,6 +415,21 @@ class AStarCornersAgent(SearchAgent):
         self.searchFunction = lambda prob: search.aStarSearch(prob, cornersHeuristic)
         self.searchType = CornersProblem
 
+@lru_cache(maxsize=None)
+def getFoodIndices(gameState):
+    return {f: i for i, f in enumerate(gameState.getFood().asList())}
+
+@lru_cache(maxsize=None)
+def getFoodAdjacencyMatrix(gameState):
+    foodList = gameState.getFood().asList()
+    foodIndices = getFoodIndices(gameState)
+    numFood = len(foodList)
+    adjM = np.zeros((numFood, numFood))
+    for f1, f2 in combinations(foodList, 2):
+        i, j = foodIndices[f1], foodIndices[f2]
+        adjM[i, j] = adjM[j, i] = mazeDistance(gameState, f1, f2)
+    return adjM
+
 class FoodSearchProblem:
     """
     A search problem associated with finding the a path that collects all of the
@@ -424,7 +444,12 @@ class FoodSearchProblem:
         self.walls = startingGameState.getWalls()
         self.startingGameState = startingGameState
         self._expanded = 0 # DO NOT CHANGE
-        self.heuristicInfo = {} # A dictionary for the heuristic to store information
+        self.heuristicInfo = {
+            'initialFood': startingGameState.getFood().asList(),
+            'foodIndices': getFoodIndices(startingGameState),
+            'foodAdjMatrix': getFoodAdjacencyMatrix(startingGameState),
+            'mazeDistFn': partial(mazeDistance, startingGameState)
+        } # A dictionary for the heuristic to store information
 
     def getStartState(self):
         return self.start
@@ -466,6 +491,20 @@ class AStarFoodSearchAgent(SearchAgent):
         self.searchFunction = lambda prob: search.aStarSearch(prob, foodHeuristic)
         self.searchType = FoodSearchProblem
 
+def minimumSpanningTreeTotalWeight(adjM):
+    g = nx.from_numpy_matrix(adjM)
+    mst = nx.minimum_spanning_tree(g)
+    return sum(e[2]['weight'] for e in mst.edges(data=True))
+
+def foodAdjMatrixAfterEating(problem, foodLeft):
+    foodList = problem.heuristicInfo['initialFood']
+    foodIndices = problem.heuristicInfo['foodIndices']
+    M = problem.heuristicInfo['foodAdjMatrix'].copy()
+    for f in set(foodList).difference(set(foodLeft)):
+        i = foodIndices[f]
+        M[i, :] = M[:, i] = 0
+    return M      
+
 def foodHeuristic(state: Tuple[Tuple, List[List]], problem: FoodSearchProblem):
     """
     Your heuristic for the FoodSearchProblem goes here.
@@ -496,11 +535,12 @@ def foodHeuristic(state: Tuple[Tuple, List[List]], problem: FoodSearchProblem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    value = 0
-    foods = foodGrid.asList()
-    for food in foods:
-        value = max(value, mazeDistance(food, position, problem.startingGameState))
-    return value
+    foodLeft = foodGrid.asList()
+    adjM = foodAdjMatrixAfterEating(problem, foodLeft)
+    mstTotalW = minimumSpanningTreeTotalWeight(adjM)
+    distToPacman = partial(problem.heuristicInfo['mazeDistFn'], position)
+    closestFood = min(map(distToPacman, foodLeft), default=0)
+    return closestFood + mstTotalW
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -571,7 +611,7 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         # util.raiseNotDefined()
         return self.food[x][y]
 
-def mazeDistance(point1: Tuple[int, int], point2: Tuple[int, int], gameState: pacman.GameState) -> int:
+def mazeDistance(gameState: pacman.GameState, point1: Tuple[int, int], point2: Tuple[int, int]) -> int:
     """
     Returns the maze distance between any two points, using the search functions
     you have already built. The gameState can be any game state -- Pacman's
