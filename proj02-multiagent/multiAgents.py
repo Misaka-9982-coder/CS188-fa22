@@ -159,7 +159,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         def term(state, depth):
             return state.isWin() or state.isLose() or depth == self.depth
 
-        def minValue(state, depth, ghost):  # minimizer
+        def minValue(state, depth, ghost):
             if term(state, depth):
                 return self.evaluationFunction(state)
 
@@ -172,18 +172,18 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
             return value
 
-        def maxValue(state, depth):  # maximizer
+        def maxValue(state, depth):
             if term(state, depth):
                 return self.evaluationFunction(state)
 
             value = -1e9
             for action in state.getLegalActions(0):
-                value = max(value, minValue(state.generateSuccessor(0, action), depth, 1))
+                value = max(value, minValue(state.generateSuccessor(0, action), depth, ghostIdx[0]))
 
             return value
 
-        res = [(action, minValue(gameState.generateSuccessor(0, action), 0, 1)) 
-                for action in gameState.getLegalActions(0)]
+        res = [(action, minValue(gameState.generateSuccessor(0, action), 0, ghostIdx[0])) \
+            for action in gameState.getLegalActions(0)]
         res.sort(key=lambda k: k[1])
 
         return res[-1][0]
