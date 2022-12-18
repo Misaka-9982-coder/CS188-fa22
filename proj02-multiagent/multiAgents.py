@@ -198,7 +198,73 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # util.raiseNotDefined()
+        curValue, alpha, beta = -1e9, -1e9, 1e9
+        nextPacmanAction = Directions.STOP
+        legalActions = gameState.getLegalActions(0).copy()
+
+        for nextAction in legalActions:
+            nextState = gameState.generateSuccessor(0, nextAction)
+            nextValue = self.getNodeValue(nextState, 0, 1, alpha, beta)
+
+            if nextValue > curValue:
+                curValue, nextPacmanAction = nextValue, nextAction
+
+            alpha = max(alpha, curValue)
+        return nextPacmanAction
+
+    def getNodeValue(self, gameState, depth = 0, agentIdx = 0, alpha = -1e9, beta = 1e9):
+        """
+        Using self-defined function, alphaValue(), betaValue() to choose the most appropriate action
+        Only when it's the final state, can we get the value of each node, using the self.evaluationFunction(gameState)
+        Otherwise we just get the alpha/beta value we defined here.
+        """
+        maxParty = [0, ]
+        minParty = list(range(1, gameState.getNumAgents()))
+
+        if depth == self.depth or gameState.isLose() or gameState.isWin():
+            return self.evaluationFunction(gameState)
+        elif agentIdx in maxParty:
+            return self.alphaValue(gameState, depth, agentIdx, alpha, beta)
+        elif agentIdx in minParty:
+            return self.betaValue(gameState, depth, agentIdx, alpha, beta)
+
+    def alphaValue(self, gameState, depth, agentIdx, alpha = -1e9, beta = 1e9):
+        """
+        maxParty, search for maximums
+        """
+        value = -1e9
+        legalActions = gameState.getLegalActions(agentIdx)
+        for index, action in enumerate(legalActions):
+            nextValue = self.getNodeValue(gameState.generateSuccessor(agentIdx, action), \
+                depth, agentIdx + 1, alpha, beta)
+            value = max(value, nextValue)
+            if value > beta:  # next_agent in which party
+                return value
+            alpha = max(alpha, value)
+        return value
+
+    def betaValue(self, gameState, depth, agentIdx, alpha = -1e9, beta = 1e9):
+        """
+        minParty, search for minimums
+        """
+        value = 1e9
+        legalActions = gameState.getLegalActions(agentIdx)
+        for index, action in enumerate(legalActions):
+            if agentIdx == gameState.getNumAgents() - 1:
+                nextValue = self.getNodeValue(gameState.generateSuccessor(agentIdx, action), \
+                    depth + 1, 0, alpha, beta)
+                value = min(value, nextValue)  # begin next depth
+                if value < alpha:
+                    return value
+            else:
+                nextValue = self.getNodeValue(gameState.generateSuccessor(agentIdx, action), \
+                    depth, agentIdx + 1, alpha, beta)
+                value = min(value, nextValue)  # begin next depth
+                if value < alpha:  # next agent goes on at the same depth
+                    return value
+            beta = min(beta, value)
+        return value
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
