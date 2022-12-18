@@ -330,7 +330,39 @@ def betterEvaluationFunction(currentGameState: GameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # util.raiseNotDefined()
+    newPos = currentGameState.getPacmanPosition()
+    newFood = currentGameState.getFood()
+    newGhostStates = currentGameState.getGhostStates()
+
+    # Consts
+    INF = 100000000.0  # Infinite value
+    WEIGHT_FOOD = 10.0  # Food base value
+    WEIGHT_GHOST = -10.0  # Ghost base value
+    WEIGHT_SCARED_GHOST = 100.0  # Scared ghost base value
+
+    # Base on gameState.getScore()
+    score = currentGameState.getScore()
+
+    # Evaluate the distance to the closest food
+    distancesToFoodList = [util.manhattanDistance(newPos, foodPos) for foodPos in newFood.asList()]
+    if len(distancesToFoodList) > 0:
+        score += WEIGHT_FOOD / min(distancesToFoodList)
+    else:
+        score += WEIGHT_FOOD
+
+    # Evaluate the distance to ghosts
+    for ghost in newGhostStates:
+        distance = manhattanDistance(newPos, ghost.getPosition())
+        if distance > 0:
+            if ghost.scaredTimer > 0:  # If scared, add points
+                score += WEIGHT_SCARED_GHOST / distance
+            else:  # If not, decrease points
+                score += WEIGHT_GHOST / distance
+        else:
+            return -INF  # Pacman is dead at this point
+
+    return score
 
 # Abbreviation
 better = betterEvaluationFunction
