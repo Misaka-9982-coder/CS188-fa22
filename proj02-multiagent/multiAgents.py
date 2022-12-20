@@ -285,26 +285,26 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 
         for action in gameState.getLegalActions(agentIndex=0):
             sucState = gameState.generateSuccessor(action=action, agentIndex=0)
-            sucValue = self.expNode(sucState, curDepth=0, agentIndex=1)
+            sucValue = self.expValue(sucState, curDepth=0, agentIndex=1)
             if sucValue > maxValue:
                 maxValue = sucValue
                 maxAction = action
 
         return maxAction
 
-    def maxNode(self, gameState, curDepth):
+    def maxValue(self, gameState, curDepth):
         if curDepth == self.depth or gameState.isLose() or gameState.isWin():
             return self.evaluationFunction(gameState)
 
         maxValue = -1e9
         for action in gameState.getLegalActions(agentIndex=0):
             sucState = gameState.generateSuccessor(action=action, agentIndex=0)
-            sucValue = self.expNode(sucState, curDepth=curDepth, agentIndex=1)
+            sucValue = self.expValue(sucState, curDepth=curDepth, agentIndex=1)
             if sucValue > maxValue:
                 maxValue = sucValue
         return maxValue
 
-    def expNode(self, gameState, curDepth, agentIndex):
+    def expValue(self, gameState, curDepth, agentIndex):
         if curDepth == self.depth or gameState.isLose() or gameState.isWin():
             return self.evaluationFunction(gameState)
 
@@ -314,9 +314,9 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         for action in gameState.getLegalActions(agentIndex=agentIndex):
             sucState = gameState.generateSuccessor(agentIndex=agentIndex, action=action)
             if agentIndex == numAgent - 1:
-                sucValue = self.maxNode(sucState, curDepth=curDepth + 1)
+                sucValue = self.maxValue(sucState, curDepth=curDepth + 1)
             else:
-                sucValue = self.expNode(sucState, curDepth=curDepth, agentIndex=agentIndex + 1)
+                sucValue = self.expValue(sucState, curDepth=curDepth, agentIndex=agentIndex + 1)
             totalValue += sucValue
 
         return totalValue / numAction
