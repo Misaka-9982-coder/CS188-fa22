@@ -283,42 +283,43 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         maxValue = -1e9
         maxAction = Directions.STOP
 
-        for action in gameState.getLegalActions(agentIndex=0):
-            sucState = gameState.generateSuccessor(action=action, agentIndex=0)
-            sucValue = self.expValue(sucState, curDepth=0, agentIndex=1)
+        for action in gameState.getLegalActions(0):
+            sucState = gameState.generateSuccessor(0, action)
+            sucValue = self.getNodeValue(sucState, 0, 1)
             if sucValue > maxValue:
-                maxValue = sucValue
-                maxAction = action
+                maxValue, maxAction = sucValue, action
 
         return maxAction
 
-    def maxValue(self, gameState, curDepth):
-        if curDepth == self.depth or gameState.isLose() or gameState.isWin():
+    def getNodeValue(self, gameState, curDepth, agentIndex):
+        if curDepth == self.depth or gameState.isWin() or gameState.isLose():
             return self.evaluationFunction(gameState)
 
+        if agentIndex == 0:
+            return self.maxValue(gameState, curDepth)
+        else:
+            return self.expValue(gameState, curDepth, agentIndex)
+
+    def maxValue(self, gameState, curDepth):
         maxValue = -1e9
-        for action in gameState.getLegalActions(agentIndex=0):
-            sucState = gameState.generateSuccessor(action=action, agentIndex=0)
-            sucValue = self.expValue(sucState, curDepth=curDepth, agentIndex=1)
-            if sucValue > maxValue:
-                maxValue = sucValue
+        for action in gameState.getLegalActions(0):
+            sucState = gameState.generateSuccessor(0, action)
+            sucValue = self.getNodeValue(sucState, curDepth, 1)
+            maxValue = max(maxValue, sucValue)
         return maxValue
 
     def expValue(self, gameState, curDepth, agentIndex):
-        if curDepth == self.depth or gameState.isLose() or gameState.isWin():
-            return self.evaluationFunction(gameState)
-
-        numAction = len(gameState.getLegalActions(agentIndex=agentIndex))
         totalValue = 0.0
         numAgent = gameState.getNumAgents()
-        for action in gameState.getLegalActions(agentIndex=agentIndex):
-            sucState = gameState.generateSuccessor(agentIndex=agentIndex, action=action)
+        for action in gameState.getLegalActions(agentIndex):
+            sucState = gameState.generateSuccessor(agentIndex, action)
             if agentIndex == numAgent - 1:
-                sucValue = self.maxValue(sucState, curDepth=curDepth + 1)
+                sucValue = self.getNodeValue(sucState, curDepth + 1, 0)
             else:
-                sucValue = self.expValue(sucState, curDepth=curDepth, agentIndex=agentIndex + 1)
+                sucValue = self.getNodeValue(sucState, curDepth, agentIndex + 1)
             totalValue += sucValue
 
+        numAction = len(gameState.getLegalActions(agentIndex))
         return totalValue / numAction
 
 
